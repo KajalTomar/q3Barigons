@@ -1,12 +1,133 @@
-import java.util.Arrays;
-import java.util.List;
-import java.util.LinkedList;
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
 
-void tri(int x0, int y0, int x1, int y1, int x2, int y2, int r, int g, int b) {
+import java.util.Arrays; 
+import java.util.List; 
+import java.util.LinkedList; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class q3Barigons extends PApplet {
+
+
+
+
+
+public void tri(int x0, int y0, int x1, int y1, int x2, int y2, int r, int g, int b) {
   // TODO: write this method, and any supporting code you need
+    
+  // edge vectors
+  PVector e0 = new PVector(x0-x2, y0-y2);
+  PVector e1 = new PVector(x1-x0, y1-y0);
+  PVector e2 = new PVector(x2-x1, y2-y1);
+
+  // area vectors
+  PVector a0 = new PVector();
+  PVector a1 = new PVector();
+  PVector a2 = new PVector();
+
+ // areas
+  float t0;
+  float t1; 
+  float t2;
+
+  // areas
+  float at0;
+  float at1; 
+  float at2;
+
+  float area; 
+
+  // bounding box boundaries 
+  int minX = min(x0, x1, x2);
+  int maxX = max(x0, x1, x2);
+  
+  int minY = min(y0, y1, y2);
+  int maxY = max(y0, y1, y2);
+
+//   beginShape(TRIANGLES);
+//     vertex(x0, y0);
+//     vertex(x0, y0);
+//     vertex(x1, y1);
+//   endShape();
+
+  int pointResult;
+
+
+  // scan line algorithm 
+  for(int x = minX; x <= maxX; x++){
+    for(int y = minY; y <= maxY; y++){
+
+        area = crossProduct(e1, e0)/2;
+
+        if(area != 0){
+            a0.set(x-x2,y-y2);
+            a1.set(x-x0,y-y0);
+            a2.set(x-x1,y-y1);
+
+            t0 = crossProduct(e2, a2)/2;
+            t1 = crossProduct(e0, a0)/2;
+            t2 = crossProduct(e1, a1)/2;
+
+            // barycentric coordinates
+            at0 = t0/area;
+            at1 = t1/area;
+            at2 = t2/area;
+
+            // at0 + at1 + at2 = 1
+
+            // normalize
+
+            // [0.52,1] 
+            float length = sqrt(at0*at0 + at1*at1 + at2*at2); 
+
+            length = (length-0.52f)/0.48f; // this now gives length from 0-1
+
+            if(( t0 > 0 ) && (t1 > 0) && (t2 > 0)){
+
+                // all three areas are positive
+                // counter - clockwise   
+                   
+                stroke(r + (255 * (1 - length)),g + (255 * (1 - length)),b + (255 * (1 - length)));   
+                drawPoint(x,y);
+            }
+            else if(( t0 < 0 ) && (t1 < 0) && (t2 < 0)){
+
+                // all three areas are positive
+                // clockwise    
+                stroke(r - (255 * (1 - length)),g - (255 * (1 - length)),b - (255 * (1 - length)));               
+                drawPoint(x,y);
+            }
+
+        }
+
+    }
+
+  }
 }
 
-void polygon(int[][] vertices, int r, int g, int b) {
+public int crossProduct(PVector e, PVector a){
+    return PApplet.parseInt(e.x*a.y - e.y*a.x);
+}
+
+
+public void drawPoint(int x, int y){
+    beginShape(POINTS);
+        vertex(x,y);
+    endShape();
+}
+
+
+public void polygon(int[][] vertices, int r, int g, int b) {
   // TODO: write this method, and any supporting code you need
   // ear clipping needs a mutable list, here's one way to get it
   List<int[]> vs = new LinkedList<int[]>(Arrays.asList(vertices));
@@ -14,8 +135,8 @@ void polygon(int[][] vertices, int r, int g, int b) {
 
 int state = 0;
 
-void setup() {
-  size(640, 640, P3D);
+public void setup() {
+  
   frameRate(30);
   
   // for consistency with the notes, use the OpenGL coordinate system (origin in bottom-left)
@@ -24,7 +145,7 @@ void setup() {
   noLoop();
 }
 
-void draw() {
+public void draw() {
   background(83, 83, 128);
   
   int total = tris.length + polygons.length;
@@ -42,7 +163,7 @@ void draw() {
 
 }
 
-void keyPressed() {
+public void keyPressed() {
   state++;
   redraw();
 }
@@ -1694,3 +1815,13 @@ int[][][] polygons = new int[][][] {
     { 108, 633 }
   }
 };
+  public void settings() {  size(640, 640, P3D); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "q3Barigons" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
